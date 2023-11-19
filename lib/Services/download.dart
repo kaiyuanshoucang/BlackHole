@@ -25,6 +25,7 @@ import 'package:blackhole/CustomWidgets/snackbar.dart';
 import 'package:blackhole/Helpers/lyrics.dart';
 import 'package:blackhole/Services/ext_storage_provider.dart';
 import 'package:blackhole/Services/youtube_services.dart';
+// import 'package:ffmpeg_kit_flutter_audio/ffmpeg_kit.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 // import 'package:flutter_downloader/flutter_downloader.dart';
@@ -156,15 +157,12 @@ class Download with ChangeNotifier {
         switch (rememberOption) {
           case 0:
             lastDownloadId = data['id'].toString();
-            break;
           case 1:
             downloadSong(context, dlPath, filename, data);
-            break;
           case 2:
             while (await File('$dlPath/$filename').exists()) {
               filename = filename.replaceAll('.m4a', ' (1).m4a');
             }
-            break;
           default:
             lastDownloadId = data['id'].toString();
             break;
@@ -372,17 +370,7 @@ class Download with ChangeNotifier {
     }
     String kUrl = data['url'].toString();
 
-    if (data['url'].toString().contains('google')) {
-      Logger.root.info('Fetching youtube download url with preferred quality');
-      // filename = filename.replaceAll('.m4a', '.opus');
-
-      kUrl = preferredYtDownloadQuality == 'High'
-          ? data['highUrl'].toString()
-          : data['lowUrl'].toString();
-      if (kUrl == 'null') {
-        kUrl = data['url'].toString();
-      }
-    } else {
+    if (!data['url'].toString().contains('google')) {
       Logger.root.info('Fetching jiosaavn download url with preferred quality');
       kUrl = kUrl.replaceAll(
         '_96.',
@@ -396,11 +384,13 @@ class Download with ChangeNotifier {
     Stream<List<int>> stream;
     // Download from yt
     if (data['url'].toString().contains('google')) {
+      // Use preferredYtDownloadQuality to check for quality first
       final AudioOnlyStreamInfo streamInfo =
-          (await YouTubeServices().getStreamInfo(data['id'].toString())).last;
+          (await YouTubeServices.instance.getStreamInfo(data['id'].toString()))
+              .last;
       total = streamInfo.size.totalBytes;
       // Get the actual stream
-      stream = YouTubeServices().getStreamClient(streamInfo);
+      stream = YouTubeServices.instance.getStreamClient(streamInfo);
     } else {
       Logger.root.info('Connecting to Client');
       client = Client();
@@ -469,7 +459,7 @@ class Download with ChangeNotifier {
         //       'libmp3lame',
         //       '-b:a',
         //       '320k',
-        //       (filepath!.replaceAll('.m4a', '.mp3'))
+        //       filepath!.replaceAll('.m4a', '.mp3'),
         //     ];
         //   }
         //   if (downloadFormat == 'm4a') {
@@ -481,12 +471,16 @@ class Download with ChangeNotifier {
         //       'aac',
         //       '-b:a',
         //       '320k',
-        //       filepath!.replaceAll('.m4a', '.m4a')
+        //       filepath!.replaceAll('.m4a', '.m4a'),
         //     ];
         //   }
-        //   // await FlutterFFmpeg().executeWithArguments(_argsList);
-        //   // await File(filepath!).delete();
-        //   // filepath = filepath!.replaceAll('.m4a', '.$downloadFormat');
+        //   if (argsList != null) {
+        //     Logger.root.info('Converting audio to $downloadFormat');
+        //     await FFmpegKit.executeWithArguments(argsList);
+        //     Logger.root.info('Conversion complete, deleting old file');
+        //     await File(filepath!).delete();
+        //     filepath = filepath!.replaceAll('.m4a', '.$downloadFormat');
+        //   }
         // }
         Logger.root.info('Getting audio tags');
         if (Platform.isAndroid) {

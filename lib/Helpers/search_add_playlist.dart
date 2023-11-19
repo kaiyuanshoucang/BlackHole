@@ -123,8 +123,8 @@ class SearchAddPlaylist {
             await SaavnAPI().getSongFromToken(id, 'playlist', n: -1);
         return {
           'title': data['title'],
-          'count': data['list'].length,
-          'tracks': data['list'],
+          'count': data['songs'].length,
+          'tracks': data['songs'],
         };
       }
       return {};
@@ -160,7 +160,7 @@ class SearchAddPlaylist {
         if (index != -1) {
           addMapToPlaylist(playName, result[index] as Map);
         } else {
-          YouTubeServices()
+          YouTubeServices.instance
               .formatVideo(
             video: track as Video,
             getUrl: false,
