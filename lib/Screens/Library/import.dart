@@ -218,7 +218,7 @@ Future<void> importYt(
       Navigator.pop(context);
       final Map data = await SearchAddPlaylist.addYtPlaylist(link);
       if (data.isNotEmpty) {
-        if (data['title'] == '' && data['count'] == 0) {
+        if (data['songs'] == null || data['songs'].length == 0) {
           Logger.root.severe(
             'Failed to import YT playlist. Data not empty but title or the count is empty.',
           );
@@ -228,22 +228,16 @@ Future<void> importYt(
             duration: const Duration(seconds: 3),
           );
         } else {
-          playlistNames.add(
-            data['title'] == '' ? 'Yt Playlist' : data['title'],
-          );
-          settingsBox.put(
-            'playlistNames',
-            playlistNames,
-          );
+          await addPlaylist(data['name'].toString(), data['songs'] as List);
 
-          await SearchAddPlaylist.showProgress(
-            data['count'] as int,
-            context,
-            SearchAddPlaylist.ytSongsAdder(
-              data['title'].toString(),
-              data['tracks'] as List,
-            ),
-          );
+          // await SearchAddPlaylist.showProgress(
+          //   (data['songs'] as List).length,
+          //   context,
+          //   SearchAddPlaylist.ytSongsAdder(
+          //     data['name'].toString(),
+          //     data['songs'] as List,
+          //   ),
+          // );
         }
       } else {
         Logger.root.severe(
@@ -363,8 +357,8 @@ Future<void> importSpotifyViaLink(
     title: AppLocalizations.of(context)!.enterPlaylistLink,
     initialText: '',
     keyboardType: TextInputType.url,
-    onSubmitted: (String value, BuildContext context) async {
-      Navigator.pop(context);
+    onSubmitted: (String value, BuildContext ctxt) async {
+      Navigator.pop(ctxt);
       final String playlistId = value.split('?')[0].split('/').last;
       final playlistName = AppLocalizations.of(context)!.spotifyPublic;
       await importSpotify(
